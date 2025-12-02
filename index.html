@@ -8,43 +8,50 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
   <style>
-    body{font-family:Arial;background:#111;color:#fff;text-align:center;padding:50px;}
-    input,button{padding:12px;margin:10px;border-radius:8px;border:none;font-size:16px;}
-    button{background:#00ff00;color:#000;cursor:pointer;}
-    #adminPanel,#profile{display:none;margin-top:30px;padding:20px;background:#222;border-radius:12px;}
+    body {font-family: Arial; background:#111; color:#fff; text-align:center; padding:20px; margin:0;}
+    h1 {font-size:50px; margin:20px;}
+    input, button {padding:15px; margin:8px; width:90%; max-width:350px; border-radius:10px; border:none; font-size:18px;}
+    button {background:#00ff00; color:#000; cursor:pointer; font-weight:bold;}
+    #logoutBtn {background:#ff0000; margin:20px auto; display:none;}
+    #profile, #adminPanel {margin-top:40px; padding:20px; background:#222; border-radius:15px; max-width:400px; margin-left:auto; margin-right:auto;}
+    .container {max-width:500px; margin:auto;}
   </style>
 </head>
 <body>
+
+<div class="container">
   <h1>MEAP GAMES</h1>
 
   <div id="auth">
     <h2>Hesap Oluştur</h2>
     <input type="email" id="regEmail" placeholder="E-posta"><br>
-    <input type="password" id="regPass" placeholder="Şifre"><br>
-    <button onclick="register()">Kayıt Ol</button><br><br>
+    <input type="password" id="regPass" placeholder="Şifre (min. 6 karakter)"><br>
+    <button onclick="register()">Kayıt Ol</button>
 
     <h2>Giriş Yap</h2>
     <input type="email" id="loginEmail" placeholder="E-posta"><br>
     <input type="password" id="loginPass" placeholder="Şifre"><br>
-    <button onclick="login()">Giriş Yap</button><br><br>
-    <button onclick="logout()" id="logoutBtn" style="display:none;background:#ff0000;">Çıkış Yap</button>
+    <button onclick="login()">Giriş Yap</button>
   </div>
 
-  <div id="profile">
+  <button id="logoutBtn" onclick="logout()">ÇIKIŞ YAP</button>
+
+  <div id="profile" style="display:none;">
     <h2>Profil</h2>
     <input type="text" id="displayName" placeholder="İsim"><br>
-    <input type="text" id="tag" placeholder="Etiket (örn: #1234)" maxlength="10"><br>
+    <input type="text" id="tag" placeholder="Etiket örneğin #0001" maxlength="10"><br>
     <button onclick="saveProfile()">Kaydet</button>
-    <p id="profileInfo"></p>
+    <p id="profileInfo" style="margin-top:20px; font-size:20px;"></p>
   </div>
 
-  <div id="adminPanel">
+  <div id="adminPanel" style="display:none;">
     <h2>⚡ YÖNETİCİ PANELİ ⚡</h2>
-    <button onclick="alert('Oyun ekleme sistemi yakında!')">OYUN EKLE</button>
+    <button style="background:#ff00ff; padding:15px; font-size:18px;">OYUN EKLE (yakında)</button>
+    <button style="background:#00ffff; padding:15px; font-size:18px; margin-top:10px;">KULLANICILARI GÖR (yakında)</button>
   </div>
+</div>
 
 <script>
-// Firebase Config (senin kodun)
 const firebaseConfig = {
   apiKey: "AIzaSyDp2dofx_F9_p7PVaxXcjWlhxLwcRtF19o",
   authDomain: "meap-games.firebaseapp.com",
@@ -59,39 +66,38 @@ firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.database();
 
-// Kayıt
-function register(){
+function register() {
   const email = document.getElementById("regEmail").value;
   const pass = document.getElementById("regPass").value;
   auth.createUserWithEmailAndPassword(email, pass)
     .then(() => alert("Kayıt başarılı!"))
-    .catch(err => alert(err.message));
+    .catch(err => alert("Hata: " + err.message));
 }
 
-// Giriş
-function login(){
+function login() {
   const email = document.getElementById("loginEmail").value;
   const pass = document.getElementById("loginPass").value;
   auth.signInWithEmailAndPassword(email, pass)
     .then(() => {})
-    .catch(err => alert(err.message));
+    .catch(err => alert("Hata: " + err.message));
 }
 
-// Çıkış
-function logout(){
+function logout() {
   auth.signOut();
 }
 
-// Durum kontrol
 auth.onAuthStateChanged(user => {
-  if(user){
+  if (user) {
     document.getElementById("auth").style.display = "none";
     document.getElementById("logoutBtn").style.display = "block";
     document.getElementById("profile").style.display = "block";
     loadProfile(user.uid);
-    if(user.email === "maskral2525@gmail.com
-       "){ // BURAYA KENDİ MAİLİNİ YAZ
+
+    // Sadece senin mailinle giriş yapınca yönetici paneli çıkar
+    if (user.email === "maskral2525@gmail.com") {
       document.getElementById("adminPanel").style.display = "block";
+    } else {
+      document.getElementById("adminPanel").style.display = "none";
     }
   } else {
     document.getElementById("auth").style.display = "block";
@@ -101,35 +107,36 @@ auth.onAuthStateChanged(user => {
   }
 });
 
-// Profil kaydet
-function saveProfile(){
-  const uid = auth.currentUser.uid;
-  const name = document.getElementById("displayName").value;
+function saveProfile() {
+  const user = auth.currentUser;
+  if (!user) return;
+  let name = document.getElementById("displayName").value;
   let tag = document.getElementById("tag").value.toUpperCase();
+  if (tag && !tag.startsWith("#")) tag = "#" + tag;
 
-  if(tag && !tag.startsWith("#")) tag = "#" + tag;
-
-  // Etiket çakışma kontrolü
-  db.ref("tags").child(tag.replace("#","")).once("value", snap => {
-    if(snap.exists() && snap.val() !== uid){
-      alert("Bu etiket zaten kullanılıyor!");
+  db.ref("tags/" + tag.replace("#","")).once("value", snap => {
+    if (snap.exists() && snap.val() !== user.uid) {
+      alert("Bu etiket zaten alınmış!");
     } else {
-      db.ref("users/"+uid).set({name, tag, email: auth.currentUser.email});
-      db.ref("tags").child(tag.replace("#","")).set(uid);
+      db.ref("users/" + user.uid).set({
+        name: name,
+        tag: tag,
+        email: user.email
+      });
+      db.ref("tags/" + tag.replace("#","")).set(user.uid);
       alert("Profil kaydedildi!");
-      loadProfile(uid);
+      loadProfile(user.uid);
     }
   });
 }
 
-function loadProfile(uid){
-  db.ref("users/"+uid).once("value", snap => {
-    if(snap.val()){
-      const data = snap.val();
-      document.getElementById("profileInfo").innerHTML = 
-        `Merhaba <b>\( {data.name || "İsim yok"}</b><br>Etiket: <b> \){data.tag || "Yok"}</b>`;
-      document.getElementById("displayName").value = data.name || "";
-      document.getElementById("tag").value = data.tag || "";
+function loadProfile(uid) {
+  db.ref("users/" + uid).once("value", snap => {
+    if (snap.val()) {
+      const d = snap.val();
+      document.getElementById("displayName").value = d.name || "";
+      document.getElementById("tag").value = d.tag || "";
+      document.getElementById("profileInfo").innerHTML = `Merhaba <b>\( {d.name || "İsim yok"}</b><br>Etiket: <b> \){d.tag || "Yok"}</b>`;
     }
   });
 }
