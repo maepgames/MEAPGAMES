@@ -2,144 +2,124 @@
 <html lang="tr">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
- <meta name="google-site-verification" content="OpgGTyeLX_P5q5M9xdYbsI-HHJgnxV3E603OTi6aOzU" /> <title>MEAP GAMES</title>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="google-site-verification" content="OpgGTyeLX_P5q5M9xdYbsI-HHJgnxV3E603OTi6aOzU" />
+  <title>MEAP GAMES</title>
   <style>
-    body {font-family: Arial; background:#111; color:#fff; text-align:center; padding:20px; margin:0;}
-    h1 {font-size:50px; margin:20px;}
-    input, button {padding:15px; margin:8px; width:90%; max-width:350px; border-radius:10px; border:none; font-size:18px;}
-    button {background:#00ff00; color:#000; cursor:pointer; font-weight:bold;}
-    #logoutBtn {background:#ff0000; margin:20px auto; display:none;}
-    #profile, #adminPanel {margin-top:40px; padding:20px; background:#222; border-radius:15px; max-width:400px; margin-left:auto; margin-right:auto;}
-    .container {max-width:500px; margin:auto;}
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@900&display=swap');
+    
+    body {
+      background: #ff3333;
+      color: white;
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin: 0;
+      padding: 20px;
+    }
+    .logo {
+      margin-top: 30px;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 70px;
+      letter-spacing: 8px;
+      text-shadow: 0 0 20px rgba(255,255,255,0.8);
+    }
+    .logo span { display: block; font-size: 90px; }
+    .underline { 
+      width: 400px; 
+      height: 6px; 
+      background: white; 
+      margin: 20px auto;
+      box-shadow: 0 0 15px white;
+    }
+    h2 { margin: 40px 0 20px; font-size: 28px; }
+    input, button {
+      padding: 15px;
+      width: 90%;
+      max-width: 350px;
+      margin: 10px auto;
+      border: none;
+      border-radius: 8px;
+      font-size: 18px;
+    }
+    input { background: rgba(255,255,255,0.2); color: white; }
+    input::placeholder { color: #ffcccc; }
+    button {
+      background: white;
+      color: #ff3333;
+      font-weight: bold;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    button:hover { background: #ff6666; color: white; }
+    #adminPanel { margin-top: 60px; color: yellow; font-size: 30px; }
   </style>
 </head>
 <body>
 
-<div class="container">
-  <h1>MEAP GAMES</h1>
-
-  <div id="auth">
-    <h2>Hesap Oluştur</h2>
-    <input type="email" id="regEmail" placeholder="E-posta"><br>
-    <input type="password" id="regPass" placeholder="Şifre (min. 6 karakter)"><br>
-    <button onclick="register()">Kayıt Ol</button>
-
-    <h2>Giriş Yap</h2>
-    <input type="email" id="loginEmail" placeholder="E-posta"><br>
-    <input type="password" id="loginPass" placeholder="Şifre"><br>
-    <button onclick="login()">Giriş Yap</button>
+  <div class="logo">
+    MEAP
+    <div class="underline"></div>
+    <span>GAMES</span>
+    <div class="underline"></div>
   </div>
 
-  <button id="logoutBtn" onclick="logout()">ÇIKIŞ YAP</button>
+  <h2>Hesap Yaratık</h2>
+  <input type="email" id="regEposta" placeholder="E-posta" /><br>
+  <input type="password" id="regPass" placeholder="Şifre" /><br>
+  <button onclick="kayitOlmak()">KAYIT OL</button>
 
-  <div id="profile" style="display:none;">
-    <h2>Profil</h2>
-    <input type="text" id="displayName" placeholder="İsim"><br>
-    <input type="text" id="tag" placeholder="Etiket örneğin #0001" maxlength="10"><br>
-    <button onclick="saveProfile()">Kaydet</button>
-    <p id="profileInfo" style="margin-top:20px; font-size:20px;"></p>
-  </div>
+  <h2>Giriş Yap</h2>
+  <input type="email" id="girisEposta" placeholder="E-posta" /><br>
+  <input type="password" id="girisGecici" placeholder="Şifre" /><br>
+  <button onclick="giris_yapmak()">GİRİŞ YAP</button>
 
   <div id="adminPanel" style="display:none;">
-    <h2>⚡ YÖNETİCİ PANELİ ⚡</h2>
-    <button style="background:#ff00ff; padding:15px; font-size:18px;">OYUN EKLE (yakında)</button>
-    <button style="background:#00ffff; padding:15px; font-size:18px; margin-top:10px;">KULLANICILARI GÖR (yakında)</button>
+    ⚡ YÖNETİCİ PANELİ ⚡
   </div>
-</div>
 
-<script>
-const firebaseConfig = {
-  apiKey: "AIzaSyDp2dofx_F9_p7PVaxXcjWlhxLwcRtF19o",
-  authDomain: "meap-games.firebaseapp.com",
-  databaseURL: "https://meap-games-default-rtdb.europe-west1.firebasedatabase.app",
-  projectId: "meap-games",
-  storageBucket: "meap-games.firebasestorage.app",
-  messagingSenderId: "1092303341508",
-  appId: "1:1092303341508:web:4f6412d44da060c669c691"
-};
+  <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-firestore-compat.js"></script>
 
-firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
-const db = firebase.database();
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyDp2dofX_F9_p7PVaXxCjW",
+      authDomain: "meap-games.firebaseapp.com",
+      projectId: "meap-games",
+      storageBucket: "meap-games.firebasestorage.app",
+      messagingSenderId: "1092303341508",
+      appId: "1:1092303341508:web:2b8f..."
+    };
+    firebase.initializeApp(firebaseConfig);
+    const yetki = firebase.auth();
+    const db = firebase.firestore();
 
-function register() {
-  const email = document.getElementById("regEmail").value;
-  const pass = document.getElementById("regPass").value;
-  auth.createUserWithEmailAndPassword(email, pass)
-    .then(() => alert("Kayıt başarılı!"))
-    .catch(err => alert("Hata: " + err.message));
-}
-
-function login() {
-  const email = document.getElementById("loginEmail").value;
-  const pass = document.getElementById("loginPass").value;
-  auth.signInWithEmailAndPassword(email, pass)
-    .then(() => {})
-    .catch(err => alert("Hata: " + err.message));
-}
-
-function logout() {
-  auth.signOut();
-}
-
-auth.onAuthStateChanged(user => {
-  if (user) {
-    document.getElementById("auth").style.display = "none";
-    document.getElementById("logoutBtn").style.display = "block";
-    document.getElementById("profile").style.display = "block";
-    loadProfile(user.uid);
-
-    // Sadece senin mailinle giriş yapınca yönetici paneli çıkar
-    if (user.email === "maskral2525@gmail.com") {
-      document.getElementById("adminPanel").style.display = "block";
-    } else {
-      document.getElementById("adminPanel").style.display = "none";
+    function kayitOlmak() {
+      let eposta = document.getElementById("regEposta").value;
+      let pass = document.getElementById("regPass").value;
+      yetki.createUserWithEmailAndPassword(eposta, pass)
+        .then(() => alert("Kayıt başarılı!"))
+        .catch(hata => alert("Hata: " + hata.message));
     }
-  } else {
-    document.getElementById("auth").style.display = "block";
-    document.getElementById("logoutBtn").style.display = "none";
-    document.getElementById("profile").style.display = "none";
-    document.getElementById("adminPanel").style.display = "none";
-  }
-});
 
-function saveProfile() {
-  const user = auth.currentUser;
-  if (!user) return;
-  let name = document.getElementById("displayName").value;
-  let tag = document.getElementById("tag").value.toUpperCase();
-  if (tag && !tag.startsWith("#")) tag = "#" + tag;
-
-  db.ref("tags/" + tag.replace("#","")).once("value", snap => {
-    if (snap.exists() && snap.val() !== user.uid) {
-      alert("Bu etiket zaten alınmış!");
-    } else {
-      db.ref("users/" + user.uid).set({
-        name: name,
-        tag: tag,
-        email: user.email
-      });
-      db.ref("tags/" + tag.replace("#","")).set(user.uid);
-      alert("Profil kaydedildi!");
-      loadProfile(user.uid);
+    function giris_yapmak() {
+      let eposta = document.getElementById("girisEposta").value;
+      let pass = document.getElementById("girisGecici").value;
+      yetki.signInWithEmailAndPassword(eposta, pass)
+        .then(user => {
+          if (eposta === "admin@meapgames.com") {
+            document.getElementById("adminPanel").style.display = "block";
+          }
+          alert("Giriş başarılı!");
+        })
+        .catch(hata => alert("Hata: " + hata.message));
     }
-  });
-}
 
-function loadProfile(uid) {
-  db.ref("users/" + uid).once("value", snap => {
-    if (snap.val()) {
-      const d = snap.val();
-      document.getElementById("displayName").value = d.name || "";
-      document.getElementById("tag").value = d.tag || "";
-      document.getElementById("profileInfo").innerHTML = `Merhaba <b>\( {d.name || "İsim yok"}</b><br>Etiket: <b> \){d.tag || "Yok"}</b>`;
-    }
-  });
-}
-</script>
+    yetki.onAuthStateChanged(kullanici => {
+      if (kullanici && kullanici.email === "admin@meapgames.com") {
+        document.getElementById("adminPanel").style.display = "block";
+      }
+    });
+  </script>
 </body>
 </html>
