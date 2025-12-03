@@ -101,10 +101,10 @@
         .then(() => alert("Kayıt başarılı!"))
         .catch(hata => alert("Hata: " + hata.message));
     }
-
+let pass = document.getElementById("girisPass").value;
     function giris_yapmak() {
       let eposta = document.getElementById("girisEposta").value;
-      let pass = document.getElementById("girisGecici").value;
+    
       yetki.signInWithEmailAndPassword(eposta, pass)
         .then(user => {
     if (eposta === "maskral2525@gmail.com") {
